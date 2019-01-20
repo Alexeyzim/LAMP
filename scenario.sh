@@ -67,13 +67,19 @@ LOG=/var/log/LAMP/Db.log
 MDB="mysql_"
 DB="kr02_"
 DB_NAME="shop"
+DB_NAME1="db"
 DB_VERSION=".2018-12-10"
+DB_VERSION1=".2019-01-10"
 DB_PASSWD="vxgcbedz"
+DB_PASSWD1="KuCnBCaJ"
 DB_RP="secret"
 cp /vagrant/site/$MDB$DB$DB_NAME$DB_VERSION.tar.gz /opt/
+cp /vagrant/site/$MDB$DB$DB_NAME1$DB_VERSION1.tar.gz /opt/
 cd /opt/
 tar xzf $MDB$DB$DB_NAME$DB_VERSION.tar.gz 2>>$LOG
 rm $MDB$DB$DB_NAME$DB_VERSION.tar.gz
+tar xzf $MDB$DB$DB_NAME1$DB_VERSION1.tar.gz 2>>$LOG
+rm $MDB$DB$DB_NAME1$DB_VERSION1.tar.gz
 
 yum install -y mariadb mariadb-server 2>>$LOG
 systemctl enable mariadb
@@ -101,6 +107,17 @@ source /opt/$MDB$DB$DB_NAME$DB_VERSION.sql;
 EOF
 echo "Done"
 
+echo "Creating database $DB_NAME1"
+mysql -u root -p$DB_RP -e "CREATE DATABASE $DB$DB_NAME1 DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;"
+mysql -u root -p$DB_RP -e "CREATE USER $DB$DB_NAME1@'%' IDENTIFIED BY '$DB_PASSWD1';"
+mysql -u root -p$DB_RP -e "GRANT ALL PRIVILEGES ON $DB$DB_NAME1.* to $DB$DB_NAME1@'%';"
+mysql -u root -p$DB_RP -e "FLUSH PRIVILEGES;"
+mysql -u root -p$DB_RP <<EOF
+use $DB$DB_NAME1;
+source /opt/$MDB$DB$DB_NAME1$DB_VERSION1.sql;
+EOF
+echo "Done"
+
 ############
 ###Drupal###
 ############
@@ -113,6 +130,8 @@ tar xzf $SITE$SITE_VER.tar.gz
 rm $SITE$SITE_VER.tar.gz
 chmod -R 755 /web/
 sed -i "223c'host' => 'localhost'," /web/$SITE_DIR/www/sites/default/settings.php
+#sed -i 's/localhost/localnew/g' /web/$SITE_DIR/www/sites/default/settings.php
+
 #Settings of firewalld
 firewall-cmd --zone=public --add-port=80/tcp --permanent
 firewall-cmd --zone=public --add-port=443/tcp --permanent

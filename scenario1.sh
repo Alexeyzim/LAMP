@@ -115,7 +115,24 @@ chmod -R 755 /web/
 sed -i "221c'host' => '192.168.0.244'," /web/$SITE_DIR/www/sites/default/settings.php
 #sed -i 's/keramb02.mysql.tools/192.168.0.244/g' /web/$SITE_DIR/www/sites/default/settings.php
 
-#Settings of firewalld
+#file for access to the site ($SITE/login.php)
+cd /web/$SITE_DIR/www
+cat > login.php <<EOF
+<?php
+define('DRUPAL_ROOT', getcwd());
+require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+global $user;
+$user = user_load(1);
+drupal_session_regenerate();
+drupal_goto('user');
+?>
+EOF
+
+###########################
+###Settings of firewalld###
+###########################
+
 firewall-cmd --zone=public --add-port=80/tcp --permanent
 firewall-cmd --zone=public --add-port=443/tcp --permanent
 firewall-cmd --zone=public --add-port=3306/tcp --permanent
